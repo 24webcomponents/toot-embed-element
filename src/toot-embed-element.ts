@@ -1,18 +1,36 @@
 const html = String.raw
 const styles = new CSSStyleSheet()
 styles.replaceSync(`
-:host(:not(:--loading)) {
-  display: grid;
-  max-inline-size: 36em;
-  padding: 0.5em;
-  gap: 0.5em;
-  border: 0.0625em solid grey;
-  border-radius: 0.5em;
-  grid-template:
-    "avatar   author-link author-link" max-content
-    "content  content     content"     max-content
-    "backlink backlink    backlink"    max-content
-    / min-content auto auto;
+@supports selector(:--loading) {
+  :host(:not(:--loading)) {
+    display: grid;
+    max-inline-size: 36em;
+    padding: 0.5em;
+    gap: 0.5em;
+    border: 0.0625em solid grey;
+    border-radius: 0.5em;
+    grid-template:
+      "avatar   author-link author-link" max-content
+      "content  content     content"     max-content
+      "backlink backlink    backlink"    max-content
+      / min-content auto auto;
+  }
+}
+
+@supports not selector(:--loading) {
+  :host(:not([internals-loading])) {
+    display: grid;
+    max-inline-size: 36em;
+    padding: 0.5em;
+    gap: 0.5em;
+    border: 0.0625em solid grey;
+    border-radius: 0.5em;
+    grid-template:
+      "avatar   author-link author-link" max-content
+      "content  content     content"     max-content
+      "backlink backlink    backlink"    max-content
+      / min-content auto auto;
+  }
 }
 
 [part="avatar"] {
