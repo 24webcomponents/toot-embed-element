@@ -1,18 +1,36 @@
 const html = String.raw
 const styles = new CSSStyleSheet()
 styles.replaceSync(`
-:host(:not(:--loading)) {
-  display: grid;
-  max-inline-size: 36em;
-  padding: 0.5em;
-  gap: 0.5em;
-  border: 0.0625em solid grey;
-  border-radius: 0.5em;
-  grid-template:
-    "avatar   author-link author-link" max-content
-    "content  content     content"     max-content
-    "backlink backlink    backlink"    max-content
-    / min-content auto auto;
+@supports selector(:--loading) {
+  :host(:not(:--loading)) {
+    display: grid;
+    max-inline-size: 36em;
+    padding: 0.5em;
+    gap: 0.5em;
+    border: 0.0625em solid grey;
+    border-radius: 0.5em;
+    grid-template:
+      "avatar   author-link author-link" max-content
+      "content  content     content"     max-content
+      "backlink backlink    backlink"    max-content
+      / min-content auto auto;
+  }
+}
+
+@supports not selector(:--loading) {
+  :host(:not([internals-loading])) {
+    display: grid;
+    max-inline-size: 36em;
+    padding: 0.5em;
+    gap: 0.5em;
+    border: 0.0625em solid grey;
+    border-radius: 0.5em;
+    grid-template:
+      "avatar   author-link author-link" max-content
+      "content  content     content"     max-content
+      "backlink backlink    backlink"    max-content
+      / min-content auto auto;
+  }
 }
 
 [part="avatar"] {
@@ -94,7 +112,7 @@ class TootEmbedElement extends HTMLElement {
   connectedCallback(): void {
     this.#internals = this.attachInternals()
     this.#internals.role = 'article'
-    this.#renderRoot = this.attachShadow({ mode: 'open' })
+    this.#renderRoot = this.attachShadow({mode: 'open'})
     this.#renderRoot.adoptedStyleSheets.push(styles)
     if (this.querySelector('script[type="application/json"]')) {
       return this.#render(JSON.parse(this.querySelector('script[type="application/json"]').textContent))
@@ -111,7 +129,7 @@ class TootEmbedElement extends HTMLElement {
 
   async load() {
     this.#internals.states.add('--loading')
-    const { tootId } = this.#useParams();
+    const {tootId} = this.#useParams()
     const apiURL = new URL(`/api/v1/statuses/${tootId}`, this.src)
     const response = await fetch(apiURL)
     console.log(response)
@@ -121,19 +139,17 @@ class TootEmbedElement extends HTMLElement {
   }
 
   #render(json) {
-    const { account, url, content } = json
+    const {account, url, content} = json
     console.log(json)
     const handleURL = new URL(account.url)
     const {handle} = this.#useParams()
     this.#renderRoot.innerHTML = html`
-      <img part="avatar" src="${account.avatar}" alt="">
+      <img part="avatar" src="${account.avatar}" alt="" />
       <a part="author-link" href="${handleURL.href}">
         <span part="author-name">${account.display_name}</span>
         <span part="author-handle">@${handle}@${handleURL.hostname}</span>
       </a>
-      <div part="content">
-        ${content}
-      </div>
+      <div part="content">${content}</div>
       <a part="backlink" href="${url}" rel="bookmark">Original Toot</a>
     `
     this.#internals.states.add('--ready')
@@ -143,16 +159,16 @@ class TootEmbedElement extends HTMLElement {
   // URLPattern only works in Chromium right now.
   // Could refactor this to use RegExp for compatibility
   /* @ts-ignore */
-  #shortPattern = new URLPattern({ pathname: '/@:handle/:tootId(\\d+)' })
+  #shortPattern = new URLPattern({pathname: '/@:handle/:tootId(\\d+)'})
   /* @ts-ignore */
-  #longPattern = new URLPattern({ pathname: '/users/:handle/statuses/:tootId(\\d+)' })
+  #longPattern = new URLPattern({pathname: '/users/:handle/statuses/:tootId(\\d+)'})
   // Toot URLs can have two different formats:
   // 1. https://indieweb.social/@keithamus/109524390152251545
   // 2. https://indieweb.social/users/keithamus/statuses/109524390152251545
-  #useParams(): { [key: string]: string } {
-    const groups = (this.#shortPattern.exec(this.src) ?? this.#longPattern.exec(this.src))?.pathname.groups;
-    if (groups) return groups;
-    throw `This doesn’t seem to be a toot URL: ${this.src}`;
+  #useParams(): {[key: string]: string} {
+    const groups = (this.#shortPattern.exec(this.src) ?? this.#longPattern.exec(this.src))?.pathname.groups
+    if (groups) return groups
+    throw `This doesn’t seem to be a toot URL: ${this.src}`
   }
 }
 
